@@ -3,8 +3,7 @@
 
 #include <QMainWindow>
 #include <QMessageBox>
-#include <QTimer>
-#include <QtNetwork/QTcpSocket>
+#include <QTcpSocket>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,7 +22,7 @@ private:
   Ui::ModbusClient *ui;
 
   QTcpSocket *m_pTcpSocket = nullptr;
-  QDataStream m_responseStream;
+  //  QDataStream m_responseStream;
   QString m_response;
 
 private slots:
@@ -31,5 +30,8 @@ private slots:
   void readResponse();
   void displayError(QAbstractSocket::SocketError socketError);
   void enableSendDataButton();
+  void on_pbConnect_clicked();
+  void on_pbQuit_clicked();
+  void slotDisconnected();
 };
 #endif // MODBUSTCPCLIENT_H

@@ -38,8 +38,15 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->lePort->setValidator(new QIntValidator(1, 65535, this));
   ui->lePort->setText("502");
 
-  m_responseStream.setDevice(m_pTcpSocket);
-  //  m_responseStream.setVersion(QDataStream::Qt_5_10);
+  //  m_responseStream.setDevice(m_pTcpSocket);
+
+  ui->leRequest->setFocus();
+  ui->leResponse->setDisabled(true);
+
+  ui->pbQuit->setDisabled(true);
+  ui->pbSendRequest->setDisabled(true);
+  ui->pbSendRequest->setToolTip(
+      "Для отправки запроса необходимо подключиться к серверу");
 
   connect(ui->cbHostName, &QComboBox::editTextChanged, this,
           &ModbusClient::enableSendDataButton);
@@ -47,54 +54,54 @@ ModbusClient::ModbusClient(QWidget *parent)
           &ModbusClient::enableSendDataButton);
   connect(ui->pbSendRequest, &QAbstractButton::clicked, this,
           &ModbusClient::requestNewData);
-  connect(ui->pbQuit, &QAbstractButton::clicked, this, &QWidget::close);
-  connect(m_pTcpSocket, &QIODevice::readyRead, this,
+  connect(m_pTcpSocket, &QTcpSocket::readyRead, this,
           &ModbusClient::readResponse);
-  connect(m_pTcpSocket, &QAbstractSocket::errorOccurred, this,
+  connect(m_pTcpSocket, &QTcpSocket::disconnected, this,
+          &ModbusClient::slotDisconnected);
+  connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
           &ModbusClient::displayError);
-
-  ui->lePort->setFocus();
 }
 
 ModbusClient::~ModbusClient() { delete ui; }
 
+///////////
+/// \brief ModbusClient::requestNewData
+///
 void ModbusClient::requestNewData() {
-  m_pTcpSocket->abort();
   QByteArray block;
 
-  int request = 900;
+  // Create dataStream to send data into socket
   QDataStream out(&block, QIODevice::WriteOnly);
-  out << request;
+  out.setVersion(QDataStream::Qt_5_12);
 
-  ui->pbSendRequest->setEnabled(false);
+  // write data in byteArray through the dataStream
+  out << ui->leRequest->text();
 
+  // write data in socket
   m_pTcpSocket->write(block);
-  m_pTcpSocket->connectToHost(ui->cbHostName->currentText(),
-                              ui->lePort->text().toInt());
 }
 
+/////////////////
+/// \brief ModbusClient::readResponse
+///
 void ModbusClient::readResponse() {
-
   QDataStream response(m_pTcpSocket);
 
-  response.startTransaction();
-
-  QString nextFortune;
-  response >> nextFortune;
-
-  if (!response.commitTransaction())
-    return;
-
-  if (nextFortune == m_response) {
-    QTimer::singleShot(0, this, &ModbusClient::requestNewData);
-    return;
+  if (response.status() == QDataStream::Ok) {
+    QString nextFortune;
+    response >> nextFortune;
+    ui->leResponse->setText(nextFortune);
+  } else {
+    ui->leResponse->setText(QString::number(response.status()));
   }
 
-  m_response = nextFortune;
-  ui->leResponse->setText(m_response);
   ui->pbSendRequest->setEnabled(true);
 }
 
+//////////////////
+/// \brief ModbusClient::displayError
+/// \param socketError
+///
 void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
   switch (socketError) {
   case QAbstractSocket::RemoteHostClosedError:
@@ -116,11 +123,44 @@ void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
                              tr("The following error occurred: %1.")
                                  .arg(m_pTcpSocket->errorString()));
   }
-
-  ui->pbSendRequest->setEnabled(true);
+  on_pbQuit_clicked();
 }
 
 void ModbusClient::enableSendDataButton() {
   ui->pbSendRequest->setEnabled(!ui->cbHostName->currentText().isEmpty() &&
                                 !ui->lePort->text().isEmpty());
+}
+
+void ModbusClient::on_pbConnect_clicked() {
+  if (m_pTcpSocket == nullptr) {
+    m_pTcpSocket = new QTcpSocket(this);
+    connect(m_pTcpSocket, &QTcpSocket::readyRead, this,
+            &ModbusClient::readResponse);
+    connect(m_pTcpSocket, &QTcpSocket::disconnected, this,
+            &ModbusClient::slotDisconnected);
+    connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
+            &ModbusClient::displayError);
+  }
+  m_pTcpSocket->connectToHost(ui->cbHostName->currentText(),
+                              ui->lePort->text().toInt());
+  ui->pbConnect->setDisabled(true);
+  ui->pbConnect->setStyleSheet("background-color: rgb(199, 255, 199)");
+  ui->pbQuit->setDisabled(false);
+  ui->pbSendRequest->setDisabled(false);
+  ui->pbSendRequest->setToolTip("Нажмите для отправки запроса серверу");
+}
+
+void ModbusClient::on_pbQuit_clicked() {
+  m_pTcpSocket->abort();
+  ui->pbConnect->setDisabled(false);
+  ui->pbConnect->setStyleSheet("background-color: rgb(255, 199, 199);");
+  ui->pbQuit->setDisabled(true);
+  ui->pbSendRequest->setDisabled(true);
+  ui->pbSendRequest->setToolTip(
+      "Для отправки запроса необходимо подключиться к серверу");
+}
+
+void ModbusClient::slotDisconnected() {
+  m_pTcpSocket->deleteLater();
+  m_pTcpSocket = nullptr;
 }
