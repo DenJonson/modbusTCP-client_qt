@@ -25,6 +25,8 @@ private:
   //  QDataStream m_responseStream;
   QString m_response;
 
+  qint16 m_serverMessageSize;
+
 private slots:
   void requestNewData();
   void readResponse();

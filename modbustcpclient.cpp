@@ -71,13 +71,16 @@ ModbusClient::~ModbusClient() { delete ui; }
 ///
 void ModbusClient::requestNewData() {
   QByteArray block;
+  block.clear();
 
   // Create dataStream to send data into socket
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
   // write data in byteArray through the dataStream
-  out << ui->leRequest->text();
+  out << qint16(0) << ui->leRequest->text();
+  out.device()->seek(0);
+  out << quint16(block.size() - sizeof(qint16));
 
   // write data in socket
   m_pTcpSocket->write(block);
@@ -90,9 +93,28 @@ void ModbusClient::readResponse() {
   QDataStream response(m_pTcpSocket);
 
   if (response.status() == QDataStream::Ok) {
-    QString nextFortune;
-    response >> nextFortune;
-    ui->leResponse->setText(nextFortune);
+    //    QString nextFortune;
+    //    response >> nextFortune;
+    //    ui->leResponse->setText(nextFortune);
+
+    for (;;) {
+      if (m_serverMessageSize == 0) {
+        if (m_pTcpSocket->bytesAvailable() < 2) {
+          break;
+        }
+        response >> m_serverMessageSize;
+      }
+      if (m_pTcpSocket->bytesAvailable() < m_serverMessageSize) {
+        break;
+      }
+      QString str;
+      response >> str;
+      ui->leResponse->setText(str);
+
+      m_serverMessageSize = 0;
+      break;
+    }
+
   } else {
     ui->leResponse->setText(QString::number(response.status()));
   }
