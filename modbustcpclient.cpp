@@ -56,6 +56,8 @@ ModbusClient::ModbusClient(QWidget *parent)
           &ModbusClient::requestNewData);
   connect(m_pTcpSocket, &QTcpSocket::readyRead, this,
           &ModbusClient::readResponse);
+  connect(m_pTcpSocket, &QTcpSocket::connected, this,
+          &ModbusClient::slotConnected);
   connect(m_pTcpSocket, &QTcpSocket::disconnected, this,
           &ModbusClient::slotDisconnected);
   connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
@@ -136,6 +138,8 @@ void ModbusClient::on_pbConnect_clicked() {
     m_pTcpSocket = new QTcpSocket(this);
     connect(m_pTcpSocket, &QTcpSocket::readyRead, this,
             &ModbusClient::readResponse);
+    connect(m_pTcpSocket, &QTcpSocket::connected, this,
+            &ModbusClient::slotConnected);
     connect(m_pTcpSocket, &QTcpSocket::disconnected, this,
             &ModbusClient::slotDisconnected);
     connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
@@ -144,9 +148,6 @@ void ModbusClient::on_pbConnect_clicked() {
   m_pTcpSocket->connectToHost(ui->cbHostName->currentText(),
                               ui->lePort->text().toInt());
   ui->pbConnect->setDisabled(true);
-  ui->pbConnect->setStyleSheet("background-color: rgb(199, 255, 199)");
-  ui->pbQuit->setDisabled(false);
-  ui->pbSendRequest->setDisabled(false);
   ui->pbSendRequest->setToolTip("Нажмите для отправки запроса серверу");
 }
 
@@ -158,6 +159,12 @@ void ModbusClient::on_pbQuit_clicked() {
   ui->pbSendRequest->setDisabled(true);
   ui->pbSendRequest->setToolTip(
       "Для отправки запроса необходимо подключиться к серверу");
+}
+
+void ModbusClient::slotConnected() {
+  ui->pbConnect->setStyleSheet("background-color: rgb(199, 255, 199)");
+  ui->pbQuit->setDisabled(false);
+  ui->pbSendRequest->setDisabled(false);
 }
 
 void ModbusClient::slotDisconnected() {

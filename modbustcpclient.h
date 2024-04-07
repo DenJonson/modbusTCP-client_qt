@@ -33,5 +33,6 @@ private slots:
   void on_pbConnect_clicked();
   void on_pbQuit_clicked();
   void slotDisconnected();
+  void slotConnected();
 };
 #endif // MODBUSTCPCLIENT_H
