@@ -27,6 +27,13 @@ private:
 
   qint16 m_serverMessageSize;
 
+  uint16_t m_commandSize;
+  int m_cln;
+  int m_row;
+
+private:
+  QByteArray createCommand();
+
 private slots:
   void requestNewData();
   void readResponse();
@@ -36,5 +43,7 @@ private slots:
   void on_pbQuit_clicked();
   void slotDisconnected();
   void slotConnected();
+  void on_pbAddByte_clicked();
+  void on_pbDelByte_clicked();
 };
 #endif // MODBUSTCPCLIENT_H

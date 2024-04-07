@@ -11,6 +11,10 @@ ModbusClient::ModbusClient(QWidget *parent)
 
   setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
+  m_cln = 0;
+  m_row = 4;
+  m_commandSize = 4;
+
   ui->cbHostName->setEditable(true);
   // find out name of this machine
   QString name = QHostInfo::localHostName();
@@ -38,10 +42,19 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->lePort->setValidator(new QIntValidator(1, 65535, this));
   ui->lePort->setText("502");
 
+  ui->sbFuncCode->setMaximum(UINT16_MAX);
+
+  for (int i = 0; i < 4; i++) {
+    QSpinBox *sb =
+        this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
+    if (sb)
+      sb->setMaximum(UINT16_MAX);
+  }
+
   //  m_responseStream.setDevice(m_pTcpSocket);
 
-  ui->leRequest->setFocus();
-  ui->leResponse->setDisabled(true);
+  //  ui->leRequest->setFocus();
+  //  ui->leResponse->setDisabled(true);
 
   ui->pbQuit->setDisabled(true);
   ui->pbSendRequest->setDisabled(true);
@@ -77,8 +90,11 @@ void ModbusClient::requestNewData() {
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
+  QByteArray command = createCommand();
+
   // write data in byteArray through the dataStream
-  out << qint16(0) << ui->leRequest->text();
+  out << qint16(0) << uint8_t(ui->sbUnitId->value())
+      << uint16_t(ui->sbFuncCode->value()) << command;
   out.device()->seek(0);
   out << quint16(block.size() - sizeof(qint16));
 
@@ -150,6 +166,18 @@ void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
   on_pbQuit_clicked();
 }
 
+QByteArray ModbusClient::createCommand() {
+  QByteArray command;
+  command.clear();
+  for (int i = 0; i < m_commandSize; i++) {
+    QSpinBox *sb =
+        this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
+    if (sb)
+      command.append(uint16_t(sb->value()));
+  }
+  return command;
+}
+
 void ModbusClient::enableSendDataButton() {
   ui->pbSendRequest->setEnabled(!ui->cbHostName->currentText().isEmpty() &&
                                 !ui->lePort->text().isEmpty());
@@ -192,4 +220,45 @@ void ModbusClient::slotConnected() {
 void ModbusClient::slotDisconnected() {
   m_pTcpSocket->deleteLater();
   m_pTcpSocket = nullptr;
+}
+
+void ModbusClient::on_pbAddByte_clicked() {
+  if (m_commandSize < 126) {
+    QSpinBox *sb = new QSpinBox(this);
+
+    sb->setMaximum(UINT16_MAX);
+    sb->setObjectName("sbCommand" + QString::number(m_commandSize));
+    ui->glReqiestContainer->addWidget(sb, m_row, m_cln);
+
+    m_commandSize = m_commandSize + 1;
+    ui->lbCommand->setText(
+        QString("Команда (%1/252  байт):").arg(m_commandSize * 2));
+
+    m_cln = m_cln + 1;
+    if (m_cln == 4) {
+      m_row = m_row + 1;
+      m_cln = 0;
+    }
+  }
+}
+
+void ModbusClient::on_pbDelByte_clicked() {
+  if (m_commandSize != 0) {
+    QSpinBox *sb = this->findChild<QSpinBox *>(
+        "sbCommand" + QString::number(m_commandSize - 1));
+    if (sb) {
+      sb->deleteLater();
+      m_commandSize = m_commandSize - 1;
+
+      ui->lbCommand->setText(
+          QString("Команда (%1/252  байт):").arg(m_commandSize * 2));
+
+      if (m_cln == 0) {
+        m_cln = 3;
+        m_row = m_row - 1;
+      } else {
+        m_cln = m_cln - 1;
+      }
+    }
+  }
 }
