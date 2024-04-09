@@ -22,7 +22,6 @@ private:
   Ui::ModbusClient *ui;
 
   QTcpSocket *m_pTcpSocket = nullptr;
-  //  QDataStream m_responseStream;
   QString m_response;
 
   qint16 m_serverMessageSize;
@@ -30,9 +29,6 @@ private:
   uint16_t m_commandSize;
   int m_cln;
   int m_row;
-
-private:
-  QByteArray createCommand();
 
 private slots:
   void requestNewData();

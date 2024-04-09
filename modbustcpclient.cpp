@@ -173,25 +173,6 @@ void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
   on_pbQuit_clicked();
 }
 
-QByteArray ModbusClient::createCommand() {
-  QByteArray command;
-  command.clear();
-  QDataStream out(&command, QIODevice::WriteOnly);
-  for (int i = 0; i < m_commandSize; i++) {
-    QSpinBox *sb =
-        this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
-    if (sb) {
-      //      uint16_t cByte = sb->value();
-      //      uint8_t byteList[2];
-      //      memcpy(&byteList, &cByte, sizeof(uint8_t[2]));
-      //      command.append(byteList[0]);
-      //      command.append(byteList[1]);
-      out << uint16_t(sb->value());
-    }
-  }
-  return command;
-}
-
 void ModbusClient::enableSendDataButton() {
   ui->pbSendRequest->setEnabled(!ui->cbHostName->currentText().isEmpty() &&
                                 !ui->lePort->text().isEmpty());
