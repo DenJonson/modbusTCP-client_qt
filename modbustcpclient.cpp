@@ -90,11 +90,18 @@ void ModbusClient::requestNewData() {
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
-  QByteArray command = createCommand();
-
-  // write data in byteArray through the dataStream
+  // set unitId, FuncCode
   out << qint16(0) << uint8_t(ui->sbUnitId->value())
-      << uint16_t(ui->sbFuncCode->value()) << command;
+      << uint16_t(ui->sbFuncCode->value());
+  // set command
+  for (int i = 0; i < m_commandSize; i++) {
+    QSpinBox *sb =
+        this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
+    if (sb) {
+      out << uint16_t(sb->value());
+    }
+  }
+  // set commandSize
   out.device()->seek(0);
   out << quint16(block.size() - sizeof(qint16));
 
@@ -169,11 +176,18 @@ void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
 QByteArray ModbusClient::createCommand() {
   QByteArray command;
   command.clear();
+  QDataStream out(&command, QIODevice::WriteOnly);
   for (int i = 0; i < m_commandSize; i++) {
     QSpinBox *sb =
         this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
-    if (sb)
-      command.append(uint16_t(sb->value()));
+    if (sb) {
+      //      uint16_t cByte = sb->value();
+      //      uint8_t byteList[2];
+      //      memcpy(&byteList, &cByte, sizeof(uint8_t[2]));
+      //      command.append(byteList[0]);
+      //      command.append(byteList[1]);
+      out << uint16_t(sb->value());
+    }
   }
   return command;
 }
