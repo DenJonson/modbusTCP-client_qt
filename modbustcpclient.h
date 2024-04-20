@@ -30,6 +30,9 @@ private:
   int m_cln;
   int m_row;
 
+  uint16_t transID;
+  uint16_t const protocolID;
+
 private slots:
   void requestNewData();
   void readResponse();
@@ -41,5 +44,7 @@ private slots:
   void slotConnected();
   void on_pbAddByte_clicked();
   void on_pbDelByte_clicked();
+  void on_rbUi_toggled(bool checked);
+  void on_rbCustom_toggled(bool checked);
 };
 #endif // MODBUSTCPCLIENT_H

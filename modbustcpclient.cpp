@@ -6,10 +6,12 @@
 
 ModbusClient::ModbusClient(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ModbusClient),
-      m_pTcpSocket(new QTcpSocket(this)) {
+      m_pTcpSocket(new QTcpSocket(this)), protocolID(0) {
   ui->setupUi(this);
 
   setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+
+  transID = 0;
 
   m_cln = 0;
   m_row = 4;
@@ -61,6 +63,8 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->pbSendRequest->setToolTip(
       "Для отправки запроса необходимо подключиться к серверу");
 
+  ui->rbUi->toggle();
+
   connect(ui->cbHostName, &QComboBox::editTextChanged, this,
           &ModbusClient::enableSendDataButton);
   connect(ui->lePort, &QLineEdit::textChanged, this,
@@ -83,6 +87,9 @@ ModbusClient::~ModbusClient() { delete ui; }
 /// \brief ModbusClient::requestNewData
 ///
 void ModbusClient::requestNewData() {
+  // Increment trans ID
+  transID++;
+
   QByteArray block;
   block.clear();
 
@@ -91,8 +98,8 @@ void ModbusClient::requestNewData() {
   out.setVersion(QDataStream::Qt_5_12);
 
   // set unitId, FuncCode
-  out << qint16(0) << uint8_t(ui->sbUnitId->value())
-      << uint16_t(ui->sbFuncCode->value());
+  out << uint16_t(transID) << uint16_t(protocolID) << qint16(0)
+      << uint8_t(ui->sbUnitId->value()) << uint16_t(ui->sbFuncCode->value());
   // set command
   for (int i = 0; i < m_commandSize; i++) {
     QSpinBox *sb =
@@ -102,8 +109,8 @@ void ModbusClient::requestNewData() {
     }
   }
   // set commandSize
-  out.device()->seek(0);
-  out << quint16(block.size() - sizeof(qint16));
+  out.device()->seek(4);
+  out << quint16(block.size() - sizeof(qint16) * 3);
 
   // write data in socket
   m_pTcpSocket->write(block);
@@ -154,19 +161,19 @@ void ModbusClient::displayError(QAbstractSocket::SocketError socketError) {
   case QAbstractSocket::RemoteHostClosedError:
     break;
   case QAbstractSocket::HostNotFoundError:
-    QMessageBox::information(this, tr("Fortune Client"),
+    QMessageBox::information(this, tr("ModBus client"),
                              tr("The host was not found. Please check the "
                                 "host name and port settings."));
     break;
   case QAbstractSocket::ConnectionRefusedError:
-    QMessageBox::information(this, tr("Fortune Client"),
+    QMessageBox::information(this, tr("ModBus client"),
                              tr("The connection was refused by the peer. "
-                                "Make sure the fortune server is running, "
+                                "Make sure the server is running, "
                                 "and check that the host name and port "
                                 "settings are correct."));
     break;
   default:
-    QMessageBox::information(this, tr("Fortune Client"),
+    QMessageBox::information(this, tr("ModBus client"),
                              tr("The following error occurred: %1.")
                                  .arg(m_pTcpSocket->errorString()));
   }
@@ -255,5 +262,25 @@ void ModbusClient::on_pbDelByte_clicked() {
         m_cln = m_cln - 1;
       }
     }
+  }
+}
+
+void ModbusClient::on_rbUi_toggled(bool checked) {
+  if (checked) {
+    ui->formGroupBox->setDisabled(false);
+    ui->gridGroupBox->setDisabled(true);
+  } else {
+    ui->formGroupBox->setDisabled(true);
+    ui->gridGroupBox->setDisabled(false);
+  }
+}
+
+void ModbusClient::on_rbCustom_toggled(bool checked) {
+  if (checked) {
+    ui->gridGroupBox->setDisabled(false);
+    ui->formGroupBox->setDisabled(true);
+  } else {
+    ui->gridGroupBox->setDisabled(true);
+    ui->formGroupBox->setDisabled(false);
   }
 }
