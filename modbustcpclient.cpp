@@ -53,11 +53,6 @@ ModbusClient::ModbusClient(QWidget *parent)
       sb->setMaximum(UINT16_MAX);
   }
 
-  //  m_responseStream.setDevice(m_pTcpSocket);
-
-  //  ui->leRequest->setFocus();
-  //  ui->leResponse->setDisabled(true);
-
   ui->pbQuit->setDisabled(true);
   ui->pbSendRequest->setDisabled(true);
   ui->pbSendRequest->setToolTip(
@@ -110,7 +105,16 @@ void ModbusClient::requestNewData() {
   }
   // set commandSize
   out.device()->seek(4);
-  out << quint16(block.size() - sizeof(qint16) * 3);
+  out << quint16(block.size() + 2 - sizeof(qint16) * 3);
+
+  qint16 CRC = qChecksum(block, block.size());
+
+  uint8_t buff[sizeof(qint16)];
+  memcpy(&buff, &CRC, sizeof(qint16));
+
+  for (uint64_t i = 0; i < sizeof(qint16); i++) {
+    block.append(buff[i]);
+  }
 
   // write data in socket
   m_pTcpSocket->write(block);
@@ -123,10 +127,6 @@ void ModbusClient::readResponse() {
   QDataStream response(m_pTcpSocket);
 
   if (response.status() == QDataStream::Ok) {
-    //    QString nextFortune;
-    //    response >> nextFortune;
-    //    ui->leResponse->setText(nextFortune);
-
     for (;;) {
       if (m_serverMessageSize == 0) {
         if (m_pTcpSocket->bytesAvailable() < 2) {
