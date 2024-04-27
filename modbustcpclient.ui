@@ -6,156 +6,72 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>472</width>
-    <height>904</height>
+    <width>485</width>
+    <height>887</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>ModbusTCPClient</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Порт сервера:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QPushButton" name="pbConnect">
-      <property name="text">
-       <string>Подключиться</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QPushButton" name="pbQuit">
-      <property name="text">
-       <string>Отключиться</string>
-      </property>
-     </widget>
-    </item>
-    <item row="11" column="0" colspan="3">
-     <widget class="QGroupBox" name="gridGroupBox">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QGroupBox" name="groupBox_2">
       <property name="title">
-       <string>Произвольный запрос:</string>
+       <string>GroupBox</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="1">
-        <widget class="QPushButton" name="pbDelByte">
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>Удалить два байта</string>
+          <string>Адрес сервера:</string>
          </property>
         </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QComboBox" name="cbHostName"/>
        </item>
        <item row="1" column="0">
-        <widget class="QPushButton" name="pbAddByte">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Добавить два байта</string>
+          <string>Порт сервера:</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QPushButton" name="pbSendRequest">
+       <item row="1" column="1" colspan="2">
+        <widget class="QLineEdit" name="lePort"/>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="pbConnect">
          <property name="text">
-          <string>Отправить запрос</string>
+          <string>Подключиться</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="3">
-        <widget class="QScrollArea" name="scrollArea">
-         <property name="widgetResizable">
-          <bool>true</bool>
+       <item row="2" column="2">
+        <widget class="QPushButton" name="pbQuit">
+         <property name="text">
+          <string>Отключиться</string>
          </property>
-         <widget class="QWidget" name="scrollAreaWidgetContents">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>416</width>
-            <height>143</height>
-           </rect>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <layout class="QGridLayout" name="glReqiestContainer">
-             <item row="3" column="2">
-              <widget class="QSpinBox" name="sbCommand2"/>
-             </item>
-             <item row="3" column="0">
-              <widget class="QSpinBox" name="sbCommand0"/>
-             </item>
-             <item row="3" column="1">
-              <widget class="QSpinBox" name="sbCommand1"/>
-             </item>
-             <item row="3" column="3">
-              <widget class="QSpinBox" name="sbCommand3"/>
-             </item>
-             <item row="1" column="2" colspan="2">
-              <widget class="QSpinBox" name="sbFuncCode"/>
-             </item>
-             <item row="1" column="0" colspan="2">
-              <widget class="QSpinBox" name="sbUnitIdOut">
-               <property name="maximum">
-                <number>255</number>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0" colspan="2">
-              <widget class="QLabel" name="label_4">
-               <property name="text">
-                <string>Адрес устройства</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2" colspan="2">
-              <widget class="QLabel" name="label_21">
-               <property name="text">
-                <string>Код функции</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0" colspan="4">
-              <widget class="QLabel" name="lbCommand">
-               <property name="text">
-                <string>Команда (8/252  байт):</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
         </widget>
        </item>
       </layout>
      </widget>
     </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>Адрес сервера:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0" colspan="3">
+    <item>
      <widget class="QRadioButton" name="rbUi">
       <property name="text">
        <string>Использовать поля ввода</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="1" colspan="2">
-     <widget class="QLineEdit" name="lePort"/>
-    </item>
-    <item row="9" column="0" colspan="3">
+    <item>
      <widget class="QGroupBox" name="formGroupBox">
       <property name="enabled">
        <bool>true</bool>
@@ -196,20 +112,6 @@
            </widget>
           </item>
          </layout>
-        </widget>
-       </item>
-       <item row="1" column="1" colspan="2">
-        <widget class="QLineEdit" name="leResponse">
-         <property name="readOnly">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_22">
-         <property name="text">
-          <string>Полный ответ</string>
-         </property>
         </widget>
        </item>
        <item row="2" column="1" colspan="2">
@@ -451,14 +353,149 @@
       </layout>
      </widget>
     </item>
-    <item row="0" column="1" colspan="3">
-     <widget class="QComboBox" name="cbHostName"/>
+    <item>
+     <layout class="QFormLayout" name="formLayout_5">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_22">
+        <property name="text">
+         <string>Полный ответ</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="leResponse">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="10" column="0" colspan="3">
+    <item>
      <widget class="QRadioButton" name="rbCustom">
       <property name="text">
        <string>Использовать поля произвольной команды</string>
       </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="gridGroupBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>200</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>Произвольный запрос:</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="1" column="1">
+        <widget class="QPushButton" name="pbDelByte">
+         <property name="text">
+          <string>Удалить два байта</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QPushButton" name="pbAddByte">
+         <property name="text">
+          <string>Добавить два байта</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="pbSendRequest">
+         <property name="text">
+          <string>Отправить запрос</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>441</width>
+            <height>125</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QGridLayout" name="glReqiestContainer">
+             <item row="3" column="2">
+              <widget class="QSpinBox" name="sbCommand2"/>
+             </item>
+             <item row="3" column="0">
+              <widget class="QSpinBox" name="sbCommand0"/>
+             </item>
+             <item row="3" column="1">
+              <widget class="QSpinBox" name="sbCommand1"/>
+             </item>
+             <item row="3" column="3">
+              <widget class="QSpinBox" name="sbCommand3"/>
+             </item>
+             <item row="1" column="2" colspan="2">
+              <widget class="QSpinBox" name="sbFuncCode"/>
+             </item>
+             <item row="1" column="0" colspan="2">
+              <widget class="QSpinBox" name="sbUnitIdOut">
+               <property name="maximum">
+                <number>255</number>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" colspan="2">
+              <widget class="QLabel" name="label_4">
+               <property name="text">
+                <string>Адрес устройства</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2" colspan="2">
+              <widget class="QLabel" name="label_21">
+               <property name="text">
+                <string>Код функции</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" colspan="4">
+              <widget class="QLabel" name="lbCommand">
+               <property name="text">
+                <string>Команда (8/252  байт):</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -468,8 +505,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>472</width>
-     <height>25</height>
+     <width>485</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>
