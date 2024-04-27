@@ -44,7 +44,7 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->lePort->setValidator(new QIntValidator(1, 65535, this));
   ui->lePort->setText("502");
 
-  ui->sbFuncCode->setMaximum(UINT16_MAX);
+  ui->sbFuncCode->setMaximum(UINT8_MAX);
 
   for (int i = 0; i < 4; i++) {
     QSpinBox *sb =
@@ -58,7 +58,7 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->pbSendRequest->setToolTip(
       "Для отправки запроса необходимо подключиться к серверу");
 
-  ui->rbUi->toggle();
+  ui->rbCustom->toggle();
 
   connect(ui->cbHostName, &QComboBox::editTextChanged, this,
           &ModbusClient::enableSendDataButton);
@@ -92,9 +92,11 @@ void ModbusClient::requestNewData() {
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
+  uint8_t unitId = ui->sbUnitIdOut->value();
+
   // set unitId, FuncCode
   out << uint16_t(transID) << uint16_t(protocolID) << qint16(0)
-      << uint8_t(ui->sbUnitId->value()) << uint16_t(ui->sbFuncCode->value());
+      << unitId << uint8_t(ui->sbFuncCode->value());
   // set command
   for (int i = 0; i < m_commandSize; i++) {
     QSpinBox *sb =
@@ -135,13 +137,29 @@ void ModbusClient::readResponse() {
         response >> m_serverMessageSize;
       }
       if (m_pTcpSocket->bytesAvailable() < m_serverMessageSize) {
+          qDebug() << "Error occured!";
+          QByteArray message;
+          QString str;
+          int size = m_pTcpSocket->bytesAvailable();
+          for (int i = 0; i < size; i++) {
+              char byte;
+              m_pTcpSocket->read(&byte, sizeof(char));
+              message.append(uint8_t(byte));
+          }
+          foreach(char ch, message)
+          {
+              QString strNum = QString::number(uint8_t(ch), 16).toUpper();
+              if(strNum.size() < 2)
+              {
+                  strNum = "0" + strNum;
+              }
+              str.append(strNum + " ");
+          }
+          ui->leResponse->setText(str);
+
+          m_serverMessageSize = 0;
         break;
       }
-      QString str;
-      response >> str;
-      ui->leResponse->setText(str);
-
-      m_serverMessageSize = 0;
       break;
     }
 
