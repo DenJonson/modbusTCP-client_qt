@@ -11,6 +11,9 @@ class ModbusClient;
 }
 QT_END_NAMESPACE
 
+#define UI_INPUT_MASK_8 ">HH"
+#define UI_INPUT_MASK_16 ">HH HH"
+
 class ModbusClient : public QMainWindow {
   Q_OBJECT
 
@@ -32,6 +35,8 @@ private:
 
   uint16_t transID;
   uint16_t const protocolID;
+
+
 
 private slots:
   void requestNewData();

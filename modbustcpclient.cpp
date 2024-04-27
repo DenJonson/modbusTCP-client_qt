@@ -44,7 +44,19 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->lePort->setValidator(new QIntValidator(1, 65535, this));
   ui->lePort->setText("502");
 
-  ui->sbFuncCode->setMaximum(UINT8_MAX);
+  ui->leUnitIdOut->setInputMask(UI_INPUT_MASK_8);
+  ui->leUnitIdOut->setText("00");
+  ui->leFuncCode->setInputMask(UI_INPUT_MASK_8);
+  ui->leFuncCode->setText("00");
+
+  ui->leCommand0->setInputMask(UI_INPUT_MASK_16);
+  ui->leCommand0->setText("0000");
+  ui->leCommand1->setInputMask(UI_INPUT_MASK_16);
+  ui->leCommand1->setText("0000");
+  ui->leCommand2->setInputMask(UI_INPUT_MASK_16);
+  ui->leCommand2->setText("0000");
+  ui->leCommand3->setInputMask(UI_INPUT_MASK_16);
+  ui->leCommand3->setText("0000");
 
   for (int i = 0; i < 4; i++) {
     QSpinBox *sb =
@@ -92,17 +104,17 @@ void ModbusClient::requestNewData() {
   QDataStream out(&block, QIODevice::WriteOnly);
   out.setVersion(QDataStream::Qt_5_12);
 
-  uint8_t unitId = ui->sbUnitIdOut->value();
+  uint8_t unitId = ui->leUnitIdOut->text().toInt(nullptr, 16);
 
   // set unitId, FuncCode
   out << uint16_t(transID) << uint16_t(protocolID) << qint16(0)
-      << unitId << uint8_t(ui->sbFuncCode->value());
+      << unitId << uint8_t(ui->leFuncCode->text().toInt(nullptr, 16));
   // set command
   for (int i = 0; i < m_commandSize; i++) {
-    QSpinBox *sb =
-        this->findChild<QSpinBox *>("sbCommand" + QString::number(i));
-    if (sb) {
-      out << uint16_t(sb->value());
+    QLineEdit *le =
+        this->findChild<QLineEdit *>("leCommand" + QString::number(i));
+    if (le) {
+        out << uint16_t(le->text().toInt(nullptr, 16));
     }
   }
   // set commandSize
@@ -244,11 +256,12 @@ void ModbusClient::slotDisconnected() {
 
 void ModbusClient::on_pbAddByte_clicked() {
   if (m_commandSize < 126) {
-    QSpinBox *sb = new QSpinBox(this);
+    QLineEdit *le = new QLineEdit(this);
 
-    sb->setMaximum(UINT16_MAX);
-    sb->setObjectName("sbCommand" + QString::number(m_commandSize));
-    ui->glReqiestContainer->addWidget(sb, m_row, m_cln);
+    le->setInputMask(UI_INPUT_MASK_16);
+    le->setText("0000");
+    le->setObjectName("leCommand" + QString::number(m_commandSize));
+    ui->glReqiestContainer->addWidget(le, m_row, m_cln);
 
     m_commandSize = m_commandSize + 1;
     ui->lbCommand->setText(
@@ -264,10 +277,10 @@ void ModbusClient::on_pbAddByte_clicked() {
 
 void ModbusClient::on_pbDelByte_clicked() {
   if (m_commandSize != 0) {
-    QSpinBox *sb = this->findChild<QSpinBox *>(
-        "sbCommand" + QString::number(m_commandSize - 1));
-    if (sb) {
-      sb->deleteLater();
+    QLineEdit *le = this->findChild<QLineEdit *>(
+        "leCommand" + QString::number(m_commandSize - 1));
+    if (le) {
+      le->deleteLater();
       m_commandSize = m_commandSize - 1;
 
       ui->lbCommand->setText(
@@ -302,3 +315,4 @@ void ModbusClient::on_rbCustom_toggled(bool checked) {
     ui->formGroupBox->setDisabled(false);
   }
 }
+
