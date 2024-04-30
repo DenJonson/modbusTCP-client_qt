@@ -129,7 +129,9 @@ void ModbusClient::requestNewData() {
     QLineEdit *le =
         this->findChild<QLineEdit *>("leCommand" + QString::number(i));
     if (le) {
-      out << uint16_t(le->text().toInt(nullptr, 16));
+      bool ok;
+      uint16_t commPart = le->text().split(" ").join("").toUInt(&ok, 16);
+      out << uint16_t(commPart);
     }
   }
   // set commandSize
