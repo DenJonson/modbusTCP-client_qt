@@ -22,7 +22,16 @@ public:
   ~ModbusClient();
 
 private:
+  QString convertStrToCompleteHex(QString str, int size);
+
+private:
   Ui::ModbusClient *ui;
+
+  typedef struct {
+    uint16_t transId;
+    uint16_t protocolId;
+    uint16_t transLen;
+  } mbTcpInitTrans_t;
 
   QTcpSocket *m_pTcpSocket = nullptr;
   QString m_response;
@@ -33,10 +42,8 @@ private:
   int m_cln;
   int m_row;
 
-  uint16_t transID;
-  uint16_t const protocolID;
-
-
+  uint16_t m_transID;
+  uint16_t const m_protocolID;
 
 private slots:
   void requestNewData();
@@ -49,7 +56,5 @@ private slots:
   void slotConnected();
   void on_pbAddByte_clicked();
   void on_pbDelByte_clicked();
-  void on_rbUi_toggled(bool checked);
-  void on_rbCustom_toggled(bool checked);
 };
 #endif // MODBUSTCPCLIENT_H

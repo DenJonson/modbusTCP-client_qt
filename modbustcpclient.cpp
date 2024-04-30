@@ -1,17 +1,17 @@
-#include "modbustcpclient.h"
-#include "ui_modbustcpclient.h"
-
 #include <QtNetwork/QHostInfo>
 #include <QtNetwork/QNetworkInterface>
 
+#include "modbustcpclient.h"
+#include "ui_modbustcpclient.h"
+
 ModbusClient::ModbusClient(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ModbusClient),
-      m_pTcpSocket(new QTcpSocket(this)), protocolID(0) {
+      m_pTcpSocket(new QTcpSocket(this)), m_protocolID(0) {
   ui->setupUi(this);
 
   setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-  transID = 0;
+  m_transID = 0;
 
   m_cln = 0;
   m_row = 4;
@@ -70,8 +70,6 @@ ModbusClient::ModbusClient(QWidget *parent)
   ui->pbSendRequest->setToolTip(
       "Для отправки запроса необходимо подключиться к серверу");
 
-  ui->rbCustom->toggle();
-
   connect(ui->cbHostName, &QComboBox::editTextChanged, this,
           &ModbusClient::enableSendDataButton);
   connect(ui->lePort, &QLineEdit::textChanged, this,
@@ -86,6 +84,23 @@ ModbusClient::ModbusClient(QWidget *parent)
           &ModbusClient::slotDisconnected);
   connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
           &ModbusClient::displayError);
+
+  // test
+
+  //  qDebug() << convertStrToCompleteHex("FAED1", 6) << "00 00 00 0F AE D1 ";
+
+  //  qDebug() << convertStrToCompleteHex("E000А", 3) << "E0 00 0A ";
+  //  qDebug() << convertStrToCompleteHex("AE", 1) << "AE ";
+  //  qDebug() << convertStrToCompleteHex("AE ", 1) << "AE ";
+
+  //  qDebug() << convertStrToCompleteHex("FAE", 2) << "0F AE ";
+  //  qDebug() << convertStrToCompleteHex("DFAE", 2) << "DF AE ";
+
+  //  qDebug() << convertStrToCompleteHex("0", 1) << "00 ";
+  //  qDebug() << convertStrToCompleteHex("0", 2) << "00 00 ";
+  //  qDebug() << convertStrToCompleteHex("6", 2) << "00 06 ";
+  //  qDebug() << convertStrToCompleteHex("F00", 2) << "0F 00 ";
+  //  qDebug() << convertStrToCompleteHex("FF00", 2) << "FF 00 ";
 }
 
 ModbusClient::~ModbusClient() { delete ui; }
@@ -95,7 +110,7 @@ ModbusClient::~ModbusClient() { delete ui; }
 ///
 void ModbusClient::requestNewData() {
   // Increment trans ID
-  transID++;
+  m_transID++;
 
   QByteArray block;
   block.clear();
@@ -107,14 +122,14 @@ void ModbusClient::requestNewData() {
   uint8_t unitId = ui->leUnitIdOut->text().toInt(nullptr, 16);
 
   // set unitId, FuncCode
-  out << uint16_t(transID) << uint16_t(protocolID) << qint16(0)
-      << unitId << uint8_t(ui->leFuncCode->text().toInt(nullptr, 16));
+  out << uint16_t(m_transID) << uint16_t(m_protocolID) << qint16(0) << unitId
+      << uint8_t(ui->leFuncCode->text().toInt(nullptr, 16));
   // set command
   for (int i = 0; i < m_commandSize; i++) {
     QLineEdit *le =
         this->findChild<QLineEdit *>("leCommand" + QString::number(i));
     if (le) {
-        out << uint16_t(le->text().toInt(nullptr, 16));
+      out << uint16_t(le->text().toInt(nullptr, 16));
     }
   }
   // set commandSize
@@ -138,40 +153,52 @@ void ModbusClient::requestNewData() {
 /// \brief ModbusClient::readResponse
 ///
 void ModbusClient::readResponse() {
-  QDataStream response(m_pTcpSocket);
+  mbTcpInitTrans_t initData;
+  initData.transLen = 0;
+  initData.protocolId = 0;
+  initData.transId = 0;
+
+  QTcpSocket *socket = (QTcpSocket *)sender();
+  QDataStream response(socket);
 
   if (response.status() == QDataStream::Ok) {
     for (;;) {
-      if (m_serverMessageSize == 0) {
-        if (m_pTcpSocket->bytesAvailable() < 2) {
+      if (initData.transLen == 0) {
+        if (m_pTcpSocket->bytesAvailable() < 6) {
           break;
         }
-        response >> m_serverMessageSize;
+        response >> initData.transId;
+        response >> initData.protocolId;
+        response >> initData.transLen;
       }
-      if (m_pTcpSocket->bytesAvailable() < m_serverMessageSize) {
-          qDebug() << "Error occured!";
-          QByteArray message;
-          QString str;
-          int size = m_pTcpSocket->bytesAvailable();
-          for (int i = 0; i < size; i++) {
-              char byte;
-              m_pTcpSocket->read(&byte, sizeof(char));
-              message.append(uint8_t(byte));
-          }
-          foreach(char ch, message)
-          {
-              QString strNum = QString::number(uint8_t(ch), 16).toUpper();
-              if(strNum.size() < 2)
-              {
-                  strNum = "0" + strNum;
-              }
-              str.append(strNum + " ");
-          }
-          ui->leResponse->setText(str);
-
-          m_serverMessageSize = 0;
+      if (m_pTcpSocket->bytesAvailable() < initData.transLen) {
+        qDebug() << m_pTcpSocket->bytesAvailable();
         break;
       }
+
+      QByteArray message;
+      QString str;
+      int size = m_pTcpSocket->bytesAvailable();
+      for (int i = 0; i < size; i++) {
+        char byte;
+        m_pTcpSocket->read(&byte, sizeof(char));
+        message.append(uint8_t(byte));
+      }
+
+      str += convertStrToCompleteHex(
+          QString::number(initData.transId, 16).toUpper(), sizeof(uint16_t));
+      str += convertStrToCompleteHex(
+          QString::number(initData.protocolId, 16).toUpper(), sizeof(uint16_t));
+      str += convertStrToCompleteHex(
+          QString::number(initData.transLen, 16).toUpper(), sizeof(uint16_t));
+
+      foreach (char ch, message) {
+        str += convertStrToCompleteHex(
+            QString::number(uint8_t(ch), 16).toUpper(), sizeof(char));
+      }
+      ui->leResponse->setText(str);
+
+      m_serverMessageSize = 0;
       break;
     }
 
@@ -180,6 +207,59 @@ void ModbusClient::readResponse() {
   }
 
   ui->pbSendRequest->setEnabled(true);
+}
+
+////////////////////////////
+/// \brief separates a solid hex number with spaces and insignificant zeros
+/// !!Works only fot 2 bytes max!! ))) \param str - string with hex number
+/// \param size - size of bytes in number in string
+/// \return
+///
+QString ModbusClient::convertStrToCompleteHex(QString str, int size) {
+  // If the size is less than 1 byte with a space, then we process the string
+  if (str.size() < size * 3) {
+    // If the transmitted size is 1 byte, and the string size is less than two
+    // characters and a space, then we process the string
+    if ((str.size() < 3) && (size == 1)) {
+      // if the line is empty, then fill it with zeros
+      if (str.isEmpty()) {
+        str = "00 ";
+      } else {
+        if (str.size() < 2) {
+          str = "0" + str + " ";
+        } else {
+          str = str + " ";
+        }
+      }
+    } else
+    // otherwise, we send it to recursion
+    {
+      // check for first in
+      if (str.split(" ").join("").size() != str.size()) {
+        if ((str.size() % 3) > 0) {
+          str = convertStrToCompleteHex(str.mid(0, 3), 1) +
+                convertStrToCompleteHex(str.mid(3), size - 1);
+        } else {
+          str = convertStrToCompleteHex(str.mid(0, 2), 1) +
+                convertStrToCompleteHex(str.mid(2), size - 1);
+        }
+      } else {
+        if ((str.size() % 2) > 0) {
+          str = convertStrToCompleteHex(str.at(0), 1) +
+                convertStrToCompleteHex(str.mid(1), size - 1);
+        } else {
+          str = convertStrToCompleteHex(str.mid(0, 2), 1) +
+                convertStrToCompleteHex(str.mid(2), size - 1);
+        }
+      }
+    }
+  }
+  if (str.contains("00 ")) {
+    int count = str.count("00 ");
+    str.remove("00 ");
+    str = QString("00 ").repeated(count) + str;
+  }
+  return str;
 }
 
 //////////////////
@@ -295,24 +375,3 @@ void ModbusClient::on_pbDelByte_clicked() {
     }
   }
 }
-
-void ModbusClient::on_rbUi_toggled(bool checked) {
-  if (checked) {
-    ui->formGroupBox->setDisabled(false);
-    ui->gridGroupBox->setDisabled(true);
-  } else {
-    ui->formGroupBox->setDisabled(true);
-    ui->gridGroupBox->setDisabled(false);
-  }
-}
-
-void ModbusClient::on_rbCustom_toggled(bool checked) {
-  if (checked) {
-    ui->gridGroupBox->setDisabled(false);
-    ui->formGroupBox->setDisabled(true);
-  } else {
-    ui->gridGroupBox->setDisabled(true);
-    ui->formGroupBox->setDisabled(false);
-  }
-}
-
