@@ -17,6 +17,8 @@ ModbusClient::ModbusClient(QWidget *parent)
   m_row = 4;
   m_commandSize = 4;
 
+  ui->leResponse->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH");
+
   ui->cbHostName->setEditable(true);
   // find out name of this machine
   QString name = QHostInfo::localHostName();
@@ -84,23 +86,6 @@ ModbusClient::ModbusClient(QWidget *parent)
           &ModbusClient::slotDisconnected);
   connect(m_pTcpSocket, &QTcpSocket::errorOccurred, this,
           &ModbusClient::displayError);
-
-  // test
-
-  //  qDebug() << convertStrToCompleteHex("FAED1", 6) << "00 00 00 0F AE D1 ";
-
-  //  qDebug() << convertStrToCompleteHex("E000А", 3) << "E0 00 0A ";
-  //  qDebug() << convertStrToCompleteHex("AE", 1) << "AE ";
-  //  qDebug() << convertStrToCompleteHex("AE ", 1) << "AE ";
-
-  //  qDebug() << convertStrToCompleteHex("FAE", 2) << "0F AE ";
-  //  qDebug() << convertStrToCompleteHex("DFAE", 2) << "DF AE ";
-
-  //  qDebug() << convertStrToCompleteHex("0", 1) << "00 ";
-  //  qDebug() << convertStrToCompleteHex("0", 2) << "00 00 ";
-  //  qDebug() << convertStrToCompleteHex("6", 2) << "00 06 ";
-  //  qDebug() << convertStrToCompleteHex("F00", 2) << "0F 00 ";
-  //  qDebug() << convertStrToCompleteHex("FF00", 2) << "FF 00 ";
 }
 
 ModbusClient::~ModbusClient() { delete ui; }
@@ -211,55 +196,22 @@ void ModbusClient::readResponse() {
   ui->pbSendRequest->setEnabled(true);
 }
 
-////////////////////////////
-/// \brief separates a solid hex number with spaces and insignificant zeros
-/// !!Works only fot 2 bytes max!! ))) \param str - string with hex number
-/// \param size - size of bytes in number in string
-/// \return
-///
 QString ModbusClient::convertStrToCompleteHex(QString str, int size) {
-  // If the size is less than 1 byte with a space, then we process the string
-  if (str.size() < size * 3) {
-    // If the transmitted size is 1 byte, and the string size is less than two
-    // characters and a space, then we process the string
-    if ((str.size() < 3) && (size == 1)) {
-      // if the line is empty, then fill it with zeros
-      if (str.isEmpty()) {
-        str = "00 ";
-      } else {
-        if (str.size() < 2) {
-          str = "0" + str + " ";
+  QString complete;
+  if (str.size() < size * 2) {
+    int iter = size - str.size() / 2;
+    for (int i = 0; i < iter; i++) {
+      if (i == iter - 1) {
+        if (str.size() % 2 > 0) {
+          complete += "0" + str;
         } else {
-          str = str + " ";
-        }
-      }
-    } else
-    // otherwise, we send it to recursion
-    {
-      // check for first in
-      if (str.split(" ").join("").size() != str.size()) {
-        if ((str.size() % 3) > 0) {
-          str = convertStrToCompleteHex(str.mid(0, 3), 1) +
-                convertStrToCompleteHex(str.mid(3), size - 1);
-        } else {
-          str = convertStrToCompleteHex(str.mid(0, 2), 1) +
-                convertStrToCompleteHex(str.mid(2), size - 1);
+          complete += str;
         }
       } else {
-        if ((str.size() % 2) > 0) {
-          str = convertStrToCompleteHex(str.at(0), 1) +
-                convertStrToCompleteHex(str.mid(1), size - 1);
-        } else {
-          str = convertStrToCompleteHex(str.mid(0, 2), 1) +
-                convertStrToCompleteHex(str.mid(2), size - 1);
-        }
+        complete += "00";
       }
     }
-  }
-  if (str.contains("00 ")) {
-    int count = str.count("00 ");
-    str.remove("00 ");
-    str = QString("00 ").repeated(count) + str;
+    return complete;
   }
   return str;
 }
