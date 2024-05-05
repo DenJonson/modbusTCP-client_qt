@@ -1,3 +1,4 @@
+#include <QScreen>
 #include <QtNetwork/QHostInfo>
 #include <QtNetwork/QNetworkInterface>
 
@@ -16,6 +17,18 @@ ModbusClient::ModbusClient(QWidget *parent)
   m_cln = 0;
   m_row = 4;
   m_commandSize = 4;
+
+  ui->formGroupBox_4->setHidden(true);
+  ui->formGroupBox_3->setHidden(true);
+  ui->formGroupBox_2->setHidden(true);
+  ui->groupBox->setHidden(true);
+  ui->label_20->setHidden(true);
+  ui->sbUnitId->setHidden(true);
+
+  QScreen *screen = QGuiApplication::primaryScreen();
+  setGeometry(0, 0, 0, 0);
+  move(screen->geometry().center().x() - (520 / 2),
+       screen->geometry().center().y() - (467 / 2));
 
   ui->cbHostName->setEditable(true);
   // find out name of this machine
