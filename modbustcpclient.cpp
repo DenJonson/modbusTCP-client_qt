@@ -17,7 +17,8 @@ ModbusClient::ModbusClient(QWidget *parent)
   m_row = 4;
   m_commandSize = 4;
 
-  ui->leResponse->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH");
+  ui->leResponse->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH "
+                               "HH HH HH HH HH HH HH HH HH HH HH HH");
 
   ui->cbHostName->setEditable(true);
   // find out name of this machine
