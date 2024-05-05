@@ -17,9 +17,6 @@ ModbusClient::ModbusClient(QWidget *parent)
   m_row = 4;
   m_commandSize = 4;
 
-  ui->leResponse->setInputMask(">HH HH HH HH HH HH HH HH HH HH HH HH HH HH HH "
-                               "HH HH HH HH HH HH HH HH HH HH HH HH");
-
   ui->cbHostName->setEditable(true);
   // find out name of this machine
   QString name = QHostInfo::localHostName();
@@ -184,6 +181,11 @@ void ModbusClient::readResponse() {
         str += convertStrToCompleteHex(
             QString::number(uint8_t(ch), 16).toUpper(), sizeof(char));
       }
+      QString mask = ">HH ";
+      for (int i = 2; i <= str.size() / 2; i++) {
+        mask += "HH ";
+      }
+      ui->leResponse->setInputMask(mask);
       ui->leResponse->setText(str);
 
       m_serverMessageSize = 0;
